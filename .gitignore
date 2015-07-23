@@ -35,3 +35,14 @@ data/yara/index_*.yar
 
 # Ignore venv
 venv
+
+# Ignore archive 
+*.tar.gz
+
+# Ignore other packages I put it under this directory
+jansson-2.7/
+ssdeep-2.13/
+volatility-2.4/
+yara-3.4.0/
+
+tags
