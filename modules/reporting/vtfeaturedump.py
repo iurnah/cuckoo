@@ -23,7 +23,7 @@ class vtfeatureDump(Report):
         encoding = self.options.get("encoding", "utf-8")
 
         try:
-            path = os.path.join(self.reports_path, "feature.json")
+            path = os.path.join(self.reports_path, "vtfeature.json")
             with codecs.open(path, "w", "utf-8") as report:
                 json.dump(results, report, sort_keys=False,
                           indent=int(indent), encoding=encoding)
