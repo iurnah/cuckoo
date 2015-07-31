@@ -25,7 +25,7 @@ class vtfeatureDump(Report):
         try:
             path = os.path.join(self.reports_path, "vtfeature.json")
             with codecs.open(path, "w", "utf-8") as report:
-                json.dump(results, report, sort_keys=False,
+                json.dump(results["vtfeature"], report, sort_keys=False,
                           indent=int(indent), encoding=encoding)
         except (UnicodeError, TypeError, IOError) as e:
             raise CuckooReportError("Failed to generate JSON report: %s" % e)

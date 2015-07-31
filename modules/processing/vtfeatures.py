@@ -20,6 +20,7 @@ from lib.cuckoo.common.dns import resolve
 from lib.cuckoo.common.irc import ircMessage
 from lib.cuckoo.common.objects import File
 from lib.cuckoo.common.exceptions import CuckooProcessingError
+from modules.processing.network import NetworkAnalysis 
 
 log = logging.getLogger(__name__)
 
@@ -1179,13 +1180,15 @@ class FileSystem(object):
 
         return fsfeature
 
-class Network(Processing):
+class Network:
     """network information include:
     TCP connections, DNS requrests, HTTP requests, UDP communications
     """
     key = "network"
     
-    def __init__(self):
+    def __init__(self, analysis_path, task):
+        self.analysis_path = analysis_path
+        self.task = task
         self.results = {} 
         self.tcpdst = []
         self.udpdst = []
@@ -1193,27 +1196,12 @@ class Network(Processing):
         self.httpsrv = []
 
     def run(self):
-        """ parse the pcap file and return a dictionary of udp, tcp, dns, http
-        """
-        if not IS_DPKT:
-            log.error("Python DPKT is not installed, aborting PCAP analysis.")
-            return {}
+        
+        networkinfo = NetworkAnalysis()
+        networkinfo.set_path(self.analysis_path)
+        networkinfo.set_task(self.task)
 
-        if not os.path.exists(self.pcap_path):
-            log.warning("The PCAP file does not exist at path \"%s\".",
-                        self.pcap_path)
-            return {}
-
-        if os.path.getsize(self.pcap_path) == 0:
-            log.error("The PCAP file at path \"%s\" is empty." % self.pcap_path)
-            return {}
-
-        sorted_path = self.pcap_path.replace("dump.", "dump_sorted.")
-        if Config().processing.sort_pcap:
-            sort_pcap(self.pcap_path, sorted_path)
-            results = Pcap(sorted_path).run()
-        else:
-            results = Pcap(self.pcap_path).run()
+        results = networkinfo.run() 
 
         # get the udp dst
         if results:
@@ -1587,7 +1575,8 @@ class VtFeatures(Processing):
         """run the feature generation
         """
         behavior = {}
-        vtfeature = {}
+
+        vtfeature = {"id":File(self.file_path).get_sha256()}
         # get all the [pid].log
         behavior["processes"] = Processes(self.logs_path).run() 
 
@@ -1601,8 +1590,7 @@ class VtFeatures(Processing):
             #Misc(),
         ]
 
-        network = Network()
-        network.set_path(self.analysis_path)
+        network = Network(self.analysis_path, self.task)
 
         # Iterate calls and tell interested signatures about them
         for process in behavior["processes"]:
