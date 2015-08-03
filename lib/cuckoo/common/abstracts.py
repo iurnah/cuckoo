@@ -19,6 +19,7 @@ from lib.cuckoo.common.objects import Dictionary
 from lib.cuckoo.common.utils import create_folder
 from lib.cuckoo.core.database import Database
 from lib.cuckoo.core.resultserver import ResultServer
+from lib.cuckoo.common.constants import CUCKOO_ROOT, CUCKOO_VERSION
 
 try:
     import libvirt
@@ -979,9 +980,13 @@ class Report(object):
         self.reports_path = os.path.join(self.analysis_path, "reports")
         self.shots_path = os.path.join(self.analysis_path, "shots")
         self.pcap_path = os.path.join(self.analysis_path, "dump.pcap")
+        self.rawfeature_path = os.path.join(CUCKOO_ROOT, "rawfeature")
+        self.vtfeature_path = os.path.join(CUCKOO_ROOT, "vtfeature")
 
         try:
             create_folder(folder=self.reports_path)
+            create_folder(folder=self.rawfeature_path)
+            create_folder(folder=self.vtfeature_path)
         except CuckooOperationalError as e:
             CuckooReportError(e)
 
