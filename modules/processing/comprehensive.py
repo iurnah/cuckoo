@@ -1346,7 +1346,8 @@ class Comprehesive(Processing):
 
         behaviors = behavior_i.run()
         self.comprehensive.update(behaviors)
-   
+
+        # Pass Pcap to get the network behaviors
         network_behaviors = Network(self.analysis_path, self.task).run()
         self.comprehensive.update(network_behaviors)
 

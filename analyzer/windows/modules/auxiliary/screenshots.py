@@ -24,7 +24,7 @@ class Screenshots(Auxiliary, Thread):
     def __init__(self, options):
         Thread.__init__(self)
         Auxiliary.__init__(self, options)
-        self.do_run = True
+        self.do_run = False 
 
     def stop(self):
         """Stop screenshotting."""

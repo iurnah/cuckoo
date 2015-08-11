@@ -113,6 +113,7 @@ class AnalysisManager(Thread):
             # able to store a copy of the file?
             try:
                 shutil.copy(self.task.target, self.binary)
+                #shutil.move(self.task.target, self.binary)
             except (IOError, shutil.Error) as e:
                 log.error("Unable to store file from \"%s\" to \"%s\", "
                           "analysis aborted", self.task.target, self.binary)
@@ -374,6 +375,14 @@ class AnalysisManager(Thread):
             if self.cfg.cuckoo.process_results:
                 self.process_results()
                 Database().set_status(self.task.id, TASK_REPORTED)
+
+            # nesty hack to move the analyzed file to CUCKOO_ROOT/storage/binaries 
+            try:
+                shutil.move(self.task.target, self.binary)
+            except (IOError, shutil.Error) as e:
+                log.error("Unable to move file from \"%s\" to \"%s\", "
+                          "analysis aborted", self.task.target, self.binary)
+                return False
 
             # We make a symbolic link ("latest") which links to the latest
             # analysis - this is useful for debugging purposes. This is only
