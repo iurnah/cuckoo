@@ -77,7 +77,7 @@ class VtFeatureDump(Report):
                 } 
 
         try:
-            reportname = compreobj["name"]+".json"
+            reportname = compreobj["sha256"]+".json"
             path = os.path.join(self.vtfeature_path, reportname)
             with codecs.open(path, "w", "utf-8") as report:
                 json.dump(vtfeature, report, sort_keys=True,

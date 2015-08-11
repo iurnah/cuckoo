@@ -23,7 +23,7 @@ class ComprehensiveDump(Report):
         encoding = self.options.get("encoding", "utf-8")
 
         try:
-            reportname = results["comprehensive"]["name"]+".json"
+            reportname = results["comprehensive"]["sha256"]+".json"
             path = os.path.join(self.rawfeature_path, reportname)
             with codecs.open(path, "w", "utf-8") as report:
                 json.dump(results["comprehensive"], report, sort_keys=True,
