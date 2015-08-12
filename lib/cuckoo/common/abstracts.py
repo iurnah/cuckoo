@@ -980,13 +980,11 @@ class Report(object):
         self.reports_path = os.path.join(self.analysis_path, "reports")
         self.shots_path = os.path.join(self.analysis_path, "shots")
         self.pcap_path = os.path.join(self.analysis_path, "dump.pcap")
-        self.rawfeature_path = os.path.join(CUCKOO_ROOT, "rawfeature")
-        self.vtfeature_path = os.path.join(CUCKOO_ROOT, "vtfeature")
+        self.rawfeature_path = os.path.join(CUCKOO_ROOT, "storage", "rawfeature")
+        self.vtfeature_path = os.path.join(CUCKOO_ROOT, "storage", "vtfeature")
 
         try:
             create_folder(folder=self.reports_path)
-            create_folder(folder=self.rawfeature_path)
-            create_folder(folder=self.vtfeature_path)
         except CuckooOperationalError as e:
             CuckooReportError(e)
 
