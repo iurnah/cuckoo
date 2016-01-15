@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-# Copyright (C) 2010-2015 Cuckoo Foundation.
+# Copyright (C) 2010-2013 Claudio Guarnieri.
+# Copyright (C) 2014-2015 Cuckoo Foundation.
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -61,18 +62,15 @@ def foreach_child(hwnd, lparam):
             if button in textval:
                 for btn in dontclick:
                     if btn in textval:
-                        return False
+                        break
+                else:
+                    log.info("Found button \"%s\", clicking it" % text.value)
+                    USER32.SetForegroundWindow(hwnd)
+                    KERNEL32.Sleep(1000)
+                    USER32.SendMessageW(hwnd, BM_CLICK, 0, 0)
 
-                log.info("Found button \"%s\", clicking it" % text.value)
-                USER32.SetForegroundWindow(hwnd)
-                KERNEL32.Sleep(1000)
-                USER32.SendMessageW(hwnd, BM_CLICK, 0, 0)
-        # Don't search for childs (USER32.EnumChildWindows).
-        return False
-    else:
-        # Recursively search for childs (USER32.EnumChildWindows).
-        return True
-
+    # Recursively search for childs (USER32.EnumChildWindows).
+    return True
 
 # Callback procedure invoked for every enumerated window.
 def foreach_window(hwnd, lparam):
@@ -106,9 +104,9 @@ def click_mouse():
 class Human(Auxiliary, Thread):
     """Human after all"""
 
-    def __init__(self, options):
+    def __init__(self, options={}, analyzer=None):
         Thread.__init__(self)
-        Auxiliary.__init__(self, options)
+        Auxiliary.__init__(self, options, analyzer)
         self.do_run = True
 
     def stop(self):

@@ -3,18 +3,14 @@ REST API
 ========
 
 As mentioned in :doc:`submit`, Cuckoo provides a simple and lightweight REST
-API server implemented in `Bottle.py`_, therefore in order to make the service
-work you'll need it installed. Bottle release must be 0.10 or above.
+API server implemented in `Flask`_, therefore in order to make the service
+work you'll need it installed.
 
-On Debian/Ubuntu::
+On Debian/Ubuntu with pip::
 
-    $ sudo apt-get install python-bottle
+    $ pip install flask
 
-With Pip::
-
-    $ pip install bottle
-
-.. _`Bottle.py`: http://www.bottlepy.org
+.. _`Flask`: http://flask.pocoo.org/
 
 Starting the API server
 =======================
@@ -30,11 +26,11 @@ By default it will bind the service on **localhost:8090**. If you want to change
 Web deployment
 --------------
 
-While the default method of starting the API server works fine for many cases, 
-some users may wish to deploy the server in a robust manner. This can be done 
-by exposing the API as a WSGI application through a web server. This section shows 
-a simple example of deploying the API via `uWSGI`_ and `Nginx`_. These 
-instructions are written with Ubuntu GNU/Linux in mind, but may be adapted for 
+While the default method of starting the API server works fine for many cases,
+some users may wish to deploy the server in a robust manner. This can be done
+by exposing the API as a WSGI application through a web server. This section shows
+a simple example of deploying the API via `uWSGI`_ and `Nginx`_. These
+instructions are written with Ubuntu GNU/Linux in mind, but may be adapted for
 other platforms.
 
 This solution requires uWSGI, the uWSGI Python plugin, and Nginx. All are available as packages::
@@ -54,9 +50,9 @@ To begin, create a uWSGI configuration file at ``/etc/uwsgi/apps-available/cucko
     uid = cuckoo
     gid = cuckoo
 
-This configuration inherits a number of settings from the distribution's 
-default uWSGI configuration, loading ``api.py`` from the Cuckoo installation 
-directory. If Cuckoo is installed in a different path, adjust the configuration 
+This configuration inherits a number of settings from the distribution's
+default uWSGI configuration, loading ``api.py`` from the Cuckoo installation
+directory. If Cuckoo is installed in a different path, adjust the configuration
 (the *chdir* setting, and perhaps the *uid* and *gid* settings) accordingly.
 
 Enable the app configuration and start the server::
@@ -140,6 +136,10 @@ Following is a list of currently available resources and a brief description of 
 |                                   | You can optionally specify which report format to return, if none is specified the JSON report will be returned. |
 +-----------------------------------+------------------------------------------------------------------------------------------------------------------+
 | ``GET`` :ref:`tasks_shots`        | Retrieves one or all screenshots associated with a given analysis task ID.                                       |
++-----------------------------------+------------------------------------------------------------------------------------------------------------------+
+| ``GET`` :ref:`memory_list`        | Returns a list of memory dump files associated with a given analysis task ID.                                    |
++-----------------------------------+------------------------------------------------------------------------------------------------------------------+
+| ``GET`` :ref:`memory_get`         | Retrieves one memory dump file associated with a given analysis task ID.                                         |
 +-----------------------------------+------------------------------------------------------------------------------------------------------------------+
 | ``GET`` :ref:`files_view`         | Search the analyzed binaries by MD5 hash, SHA256 hash or internal ID (referenced by the tasks details).          |
 +-----------------------------------+------------------------------------------------------------------------------------------------------------------+
@@ -384,6 +384,12 @@ Following is a list of currently available resources and a brief description of 
                 }
             }
 
+        Note: possible value for key ``status``:
+            * ``pending``
+            * ``running``
+            * ``completed``
+            * ``reported``
+
         **Parameters**:
             * ``id`` *(required)* *(int)* - ID of the task to lookup
 
@@ -427,7 +433,7 @@ Following is a list of currently available resources and a brief description of 
 
         **Parameters**:
             * ``id`` *(required)* *(int)* - ID of the task to get the report for
-            * ``format`` *(optional)* - format of the report to retrieve [json/html/maec/metadata/all/dropped]. If none is specified the JSON report will be returned. ``all`` returns all the result files as tar.bz2, ``dropped`` the dropped files as tar.bz2
+            * ``format`` *(optional)* - format of the report to retrieve [json/html/all/dropped/package_files]. If none is specified the JSON report will be returned. ``all`` returns all the result files as tar.bz2, ``dropped`` the dropped files as tar.bz2, ``package_files`` files uploaded to host by analysis packages.
 
         **Status codes**:
             * ``200`` - no error
@@ -450,6 +456,45 @@ Following is a list of currently available resources and a brief description of 
         **Parameters**:
             * ``id`` *(required)* *(int)* - ID of the task to get the report for
             * ``screenshot`` *(optional)* - numerical identifier of a single screenshot (e.g. 0001, 0002)
+
+        **Status codes**:
+            * ``404`` - file or folder not found
+
+.. _memory_list:
+
+/memory/list
+------------------
+
+    **GET /memory/list/** *(int: id)*
+
+        Returns a list of memory dump files or one memory dump file associated with the specified task ID.
+
+        **Example request**::
+
+            wget http://localhost:8090/memory/list/1
+
+        **Parameters**:
+            * ``id`` *(required)* *(int)* - ID of the task to get the report for
+
+        **Status codes**:
+            * ``404`` - file or folder not found
+
+.. _memory_get:
+
+/memory/get
+------------------
+
+    **GET /memory/get/** *(int: id)* **/** *(str: number)*
+
+        Returns one memory dump file associated with the specified task ID.
+
+        **Example request**::
+
+            wget http://localhost:8090/memory/get/1/1908
+
+        **Parameters**:
+            * ``id`` *(required)* *(int)* - ID of the task to get the report for
+            * ``pid`` *(required)* - numerical identifier (pid) of a single memory dump file (e.g. 205, 1908)
 
         **Status codes**:
             * ``404`` - file or folder not found

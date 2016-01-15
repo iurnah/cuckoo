@@ -1,9 +1,10 @@
-# Copyright (C) 2010-2015 Cuckoo Foundation.
+# Copyright (C) 2010-2013 Claudio Guarnieri.
+# Copyright (C) 2014-2015 Cuckoo Foundation.
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
+import hashlib
 import os
-import time
 import shutil
 import ntpath
 import string
@@ -12,6 +13,7 @@ import xmlrpclib
 import inspect
 import threading
 import multiprocessing
+
 from datetime import datetime
 
 from lib.cuckoo.common.exceptions import CuckooOperationalError
@@ -181,22 +183,14 @@ class Singleton(type):
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
 
-def logtime(dt):
-    """Formats time like a logger does, for the csv output
-       (e.g. "2013-01-25 13:21:44,590")
-    @param dt: datetime object
-    @return: time string
-    """
-    t = time.strftime("%Y-%m-%d %H:%M:%S", dt.timetuple())
-    s = "%s,%03d" % (t, dt.microsecond/1000)
-    return s
+class ThreadSingleton(type):
+    """Singleton per thread."""
+    _instances = threading.local()
 
-def time_from_cuckoomon(s):
-    """Parse time string received from cuckoomon via netlog
-    @param s: time string
-    @return: datetime object
-    """
-    return datetime.strptime(s, "%Y-%m-%d %H:%M:%S,%f")
+    def __call__(cls, *args, **kwargs):
+        if not getattr(cls._instances, "instance", None):
+            cls._instances.instance = super(ThreadSingleton, cls).__call__(*args, **kwargs)
+        return cls._instances.instance
 
 def to_unicode(s):
     """Attempt to fix non uft-8 string into utf-8. It tries to guess input encoding,
@@ -249,18 +243,6 @@ def cleanup_value(v):
         v = v[4:]
     return v
 
-def sanitize_filename(x):
-    """Kind of awful but necessary sanitizing of filenames to
-    get rid of unicode problems."""
-    out = ""
-    for c in x:
-        if c in string.letters + string.digits + " _-.":
-            out += c
-        else:
-            out += "_"
-
-    return out
-
 def classlock(f):
     """Classlock decorator (created for database.Database).
     Used to put a lock to avoid sqlite errors.
@@ -285,6 +267,28 @@ class SuperLock(object):
     def __enter__(self):
         self.tlock.acquire()
         self.mlock.acquire()
+
     def __exit__(self, type, value, traceback):
         self.mlock.release()
         self.tlock.release()
+
+def hash_file(method, filepath):
+    """Calculates an hash on a file by path.
+    @param method: callable hashing method
+    @param path: file path
+    @return: computed hash string
+    """
+    f = open(filepath, "rb")
+    h = method()
+    while True:
+        buf = f.read(1024 * 1024)
+        if not buf:
+            break
+        h.update(buf)
+    return h.hexdigest()
+
+def md5_file(filepath):
+    return hash_file(hashlib.md5, filepath)
+
+def sha1_file(filepath):
+    return hash_file(hashlib.sha1, filepath)
